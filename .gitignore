@@ -12,3 +12,5 @@ baseline/summary.md
 infra/azure/main.json
 data/ingested/
 inbox/
+.stress_testing.md
+.stress_testing/
