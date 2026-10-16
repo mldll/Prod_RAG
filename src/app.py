@@ -182,6 +182,9 @@ def main():
         run_evaluation()
 
     elif args.command == "serve":
+        if MAIN_LLM_MODEL == "claude_local" and args.host not in ("127.0.0.1", "localhost", "::1"):
+            parser.error("MAIN_LLM_MODEL=claude_local answers with your own Claude subscription, so only this "
+                         "machine may reach the server: add --host 127.0.0.1")
         import uvicorn
         logger.info(f"Starting API server on {args.host}:{args.port}")
         uvicorn.run("src.core.api:app", host=args.host, port=args.port, reload=False)

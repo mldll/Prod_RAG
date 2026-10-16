@@ -19,14 +19,22 @@ def create_llm(provider: str):
     """Factory function to create LLM instances based on the provider name.
     
     Args:
-        provider: The name of the LLM provider ('gemini' or 'groq').
-        
+        provider: The name of the LLM provider: 'groq', 'gemini' or 'claude_local' (the claude CLI on this
+            machine; local runs only, see src/core/claude_cli.py).
+
     Returns:
         The appropriate LLM instance for the specified provider.
-        
+
     Raises:
-        ValueError: If an unknown provider is specified.
+        ValueError: If an unknown provider is specified, or claude_local is asked for outside a developer machine.
     """
+    if provider == "claude_local":
+        from src.core.claude_cli import ChatClaudeCLI, blocked_reason
+        reason = blocked_reason()
+        if reason:
+            raise ValueError(f"claude_local is for local runs only, and {reason}. "
+                             f"Use groq or gemini here (MAIN_LLM_MODEL, EVAL_LLM_MODEL).")
+        return ChatClaudeCLI(model_name=get_model(provider))
     model = get_model(provider)
 
     if provider == "gemini":

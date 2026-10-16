@@ -132,6 +132,9 @@ def get_model(provider: str) -> str:
     if provider in _resolved_models:
         return _resolved_models[provider]
 
+    if provider == "claude_local":  # the CLI takes an alias (haiku, sonnet, opus): nothing to list or probe
+        return PREFERRED_MODELS["claude_local"][0]
+
     preferred = PREFERRED_MODELS.get(provider, [])
 
     try:

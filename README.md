@@ -107,6 +107,7 @@ Every setting has a working local default, and the cloud values are set by `infr
 | Variable | Default | Purpose |
 |---|---|---|
 | `SECRET_BACKEND` | `keyring` | `keyring`, `env`, `azure_keyvault` or `aws_secretsmanager` |
+| `MAIN_LLM_MODEL`, `EVAL_LLM_MODEL` | `groq` | The answering LLM, and the judge plus `ingest-batch`'s question writer: `groq`, `gemini` or `claude_local` (the `claude` CLI on your machine with your own Claude subscription; local runs only: refused in the clouds, CI, containers and with a cloud `STATE_BACKEND`, and `serve` needs `--host 127.0.0.1`) |
 | `STATE_BACKEND` | `local` | `local`, `azure_blob` (with `AZURE_STORAGE_ACCOUNT_URL`) or `s3` (with `S3_STATE_BUCKET`) |
 | `LOCAL_DIR`, `DATA_DIR` | `<repo>/.local`, `<repo>/data` | Working copy of the index and databases, and of the corpus |
 | `MCP_DNS_REBINDING_PROTECTION` | `true` | Set to `false` when `/mcp` is served behind a public hostname |

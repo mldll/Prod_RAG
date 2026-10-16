@@ -16,8 +16,15 @@ MAX_RETRIES = 2
 # Model used
 EMBEDDING_MODEL = "models/gemini-embedding-001"
 EMBEDDING_LOCAL_MODEL = "all-MiniLM-L6-v2"
-MAIN_LLM_MODEL = "groq" # or gemini
-EVAL_LLM_MODEL = "groq" # or gemini
+# LLM providers: groq, gemini, or claude_local (the claude CLI on this machine with your own Claude subscription;
+# local runs only, see src/core/claude_cli.py). EVAL_LLM_MODEL is the judge and ingest-batch's question writer.
+MAIN_LLM_MODEL = os.getenv("MAIN_LLM_MODEL", "groq")
+EVAL_LLM_MODEL = os.getenv("EVAL_LLM_MODEL", "groq")
+# claude_local: the model alias (haiku, sonnet or opus), the thinking effort, CLI processes at once, seconds per call
+CLAUDE_LOCAL_MODEL = os.getenv("CLAUDE_LOCAL_MODEL", "haiku")
+CLAUDE_LOCAL_EFFORT = os.getenv("CLAUDE_LOCAL_EFFORT", "low")
+CLAUDE_LOCAL_MAX_CONCURRENCY = int(os.getenv("CLAUDE_LOCAL_MAX_CONCURRENCY", "2"))
+CLAUDE_LOCAL_TIMEOUT_SECONDS = 120
 # The Groq SDK retries a rate limit (429) or server error this many times, waiting for Groq's retry-after header
 # between attempts when it's 60 s or less (0.5-8 s otherwise). Every wait counts against the caller's timeout
 # (live-eval's requests: 60 s).
@@ -68,6 +75,7 @@ SEMANTIC_CACHE_DIR = os.path.join(LOCAL_DIR, "s_cache")
 PREFERRED_MODELS = {
     "groq": ["openai/gpt-oss-20b", "qwen/qwen3.6-27b"],
     "gemini": ["gemini-2.5-flash", "gemini-3.5-flash"],
+    "claude_local": [CLAUDE_LOCAL_MODEL],
 }
 
 # Baseline configuration
