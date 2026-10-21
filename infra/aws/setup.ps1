@@ -4,7 +4,7 @@
 param(
     [string]$Region = "us-east-1",
     [string]$AppName = "ragprod",
-    [string]$GitHubRepo = "cloudlesson95-arch/Prod_RAG"
+    [string]$GitHubRepo = "mldll/Prod_RAG"
 )
 
 # Helper function to execute AWS CLI commands safely and verify exit code

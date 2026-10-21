@@ -4,7 +4,7 @@
 param(
     [string]$ResourceGroupName = "rg-ragprod",
     [string]$Location = "eastus",
-    [string]$GitHubRepo = "cloudlesson95-arch/Prod_RAG"
+    [string]$GitHubRepo = "mldll/Prod_RAG"
 )
 
 $ErrorActionPreference = "Stop"
