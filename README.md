@@ -1,9 +1,9 @@
 # Agentic RAG Platform
 
-[![Eval Loop](https://github.com/cloudlesson95-arch/Prod_RAG/actions/workflows/evaluate.yml/badge.svg)](https://github.com/cloudlesson95-arch/Prod_RAG/actions/workflows/evaluate.yml)
-[![Deploy](https://github.com/cloudlesson95-arch/Prod_RAG/actions/workflows/deploy.yml/badge.svg)](https://github.com/cloudlesson95-arch/Prod_RAG/actions/workflows/deploy.yml)
+[![Eval Loop](https://github.com/mldll/Prod_RAG/actions/workflows/evaluate.yml/badge.svg)](https://github.com/mldll/Prod_RAG/actions/workflows/evaluate.yml)
+[![Deploy](https://github.com/mldll/Prod_RAG/actions/workflows/deploy.yml/badge.svg)](https://github.com/mldll/Prod_RAG/actions/workflows/deploy.yml)
 
-A production-oriented continuation of [Simple_RAG](https://github.com/cloudlesson95-arch/Simple_RAG). The core pipeline (hybrid search, cross-encoder re-ranking, multi-hop agent, classical ML routing, semantic cache, LLM-as-judge evaluation) is documented in the [Simple_RAG README](https://github.com/cloudlesson95-arch/Simple_RAG#readme). This repository adds an MCP server, pluggable secrets, monitoring, persistent state, a web frontend, and automated deployment of one Docker image to **Azure Container Apps** and **AWS Lambda**.
+A production-oriented continuation of [Simple_RAG](https://github.com/mldll/Simple_RAG). The core pipeline (hybrid search, cross-encoder re-ranking, multi-hop agent, classical ML routing, semantic cache, LLM-as-judge evaluation) is documented in the [Simple_RAG README](https://github.com/mldll/Simple_RAG#readme). This repository adds an MCP server, pluggable secrets, monitoring, persistent state, a web frontend, and automated deployment of one Docker image to **Azure Container Apps** and **AWS Lambda**.
 
 
 ## Architecture
