@@ -3,7 +3,7 @@
 [![Eval Loop](https://github.com/mldll/Prod_RAG/actions/workflows/evaluate.yml/badge.svg)](https://github.com/mldll/Prod_RAG/actions/workflows/evaluate.yml)
 [![Deploy](https://github.com/mldll/Prod_RAG/actions/workflows/deploy.yml/badge.svg)](https://github.com/mldll/Prod_RAG/actions/workflows/deploy.yml)
 
-A production-oriented continuation of [Simple_RAG](https://github.com/mldll/Simple_RAG). The core pipeline (hybrid search, cross-encoder re-ranking, multi-hop agent, classical ML routing, semantic cache, LLM-as-judge evaluation) is documented in the [Simple_RAG README](https://github.com/mldll/Simple_RAG#readme). This repository adds an MCP server, pluggable secrets, monitoring, persistent state, a web frontend, and automated deployment of one Docker image to **Azure Container Apps** and **AWS Lambda**.
+A production-oriented continuation of [Simple_RAG](https://github.com/mldll/Simple_RAG). The core pipeline (hybrid search, cross-encoder re-ranking, multi-hop agent, classical ML routing, semantic cache, LLM-as-judge evaluation) is documented in the [Simple_RAG README](https://github.com/mldll/Simple_RAG#readme). This repository adds an MCP server, pluggable secrets, monitoring, persistent state, a web frontend, and automated deployment of one Docker image to **Azure Container Apps** and **AWS Lambda**. Only the AWS deployment is live since October 2026 (see [Deploy to Azure and AWS](#deploy-to-azure-and-aws)).
 
 
 ## Architecture
@@ -120,6 +120,8 @@ Every setting has a working local default, and the cloud values are set by `infr
 
 ## Deploy to Azure and AWS
 
+Since October 2026 only AWS is live: the Azure free trial ended and the Azure resources were torn down. The Azure steps below still work on a new subscription, and the workflows include Azure again once the repository variable `AZURE_ENABLED` is `true`.
+
 Prerequisites: PowerShell, the Azure CLI signed in (`az login`) with permission to create role assignments and app registrations, the AWS CLI with an admin profile, and your own GitHub copy of this repository (pass `-GitHubRepo <owner>/<repo>` to both setup scripts).
 
 1. Run `.\infra\azure\setup.ps1`, then `$env:AWS_PROFILE = "<admin-profile>"; .\infra\aws\setup.ps1`. Both ask for the Groq and Google API keys (typing is hidden; Enter skips a key) and print the values for the next step. They also give the GitHub Actions identities read/write access to the state snapshots, which the daily data workflow needs. The AWS script rewrites both IAM roles' trust and inline policies on every run, so rerunning it brings existing roles up to date. Its GitHub role only accepts workflow runs on `main` of the repository given by `-GitHubRepo`, and only acts on this app's ECR repository and Lambda function.
@@ -127,12 +129,12 @@ Prerequisites: PowerShell, the Azure CLI signed in (`az login`) with permission 
 
    | Secrets | Variables |
    |---|---|
-   | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | `RESOURCE_GROUP`, `ACR_NAME`, `CONTAINER_APP_NAME`, `DEPLOYED_APP_URL` |
+   | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | `RESOURCE_GROUP`, `ACR_NAME`, `CONTAINER_APP_NAME`, `DEPLOYED_APP_URL`, `AZURE_ENABLED` (`true`) |
    | `AWS_ROLE_TO_ASSUME` | `AWS_REGION`, `AWS_ECR_REPO`, `AWS_LAMBDA_ROLE_ARN`, `AWS_STATE_BUCKET` |
    | `GROQ_API_KEY`, `GOOGLE_API_KEY` (used by the evaluation gates and the question generator) | `COLLECT_REPO` (optional, default `pydantic/pydantic-ai`) |
    | | `CORS_ALLOW_ORIGINS`: the frontend's origins separated by spaces, e.g. `https://<project>.vercel.app http://localhost:3000` (use `http://localhost:3000` until the frontend has a domain) |
 
-3. Push to `main`, or run the Deploy workflow manually (targeting `azure`, `aws` or `both`). The first AWS run creates the Lambda function and its Function URL. The deploy stops before changing anything if `CORS_ALLOW_ORIGINS` is missing or contains a comma.
+3. Push to `main`, or run the Deploy workflow manually (targeting `azure`, `aws` or `both`). A push and `both` include Azure only while `AZURE_ENABLED` is `true`; choosing `azure` always runs it. The first AWS run creates the Lambda function and its Function URL. The deploy stops before changing anything if `CORS_ALLOW_ORIGINS` is missing or contains a comma.
 
 Re-running the Azure `setup.ps1` later resets the Container App to a placeholder image until the next deploy, so run the Deploy workflow right after it.
 
@@ -198,7 +200,7 @@ Run it from a venv synced with the lock (see Local setup): `ingest-batch` and `i
 
 ### Scheduled data pipeline
 
-`.github/workflows/collect-data.yml` runs daily at 06:17 UTC, and on demand from Actions → Collect Data → Run workflow (choose `azure`, `aws` or `both`, and whether to skip the LLM questions). For each cloud, on a fresh GitHub runner, it:
+`.github/workflows/collect-data.yml` runs daily at 06:17 UTC, and on demand from Actions → Collect Data → Run workflow (choose `azure`, `aws` or `both`, and whether to skip the LLM questions). Scheduled runs act like `both`, which includes Azure only while `AZURE_ENABLED` is `true`. For each cloud, on a fresh GitHub runner, it:
 
 1. writes the latest 10 releases of `COLLECT_REPO` into one inbox file, for example `pydantic-pydantic-ai-releases.md` (`collect-releases`);
 2. runs `ingest-batch` against that cloud's state store, signed in through OIDC;
@@ -210,7 +212,7 @@ The release notes are one source with a 10-release window: a new release replace
 
 ### Teardown
 
-Disable the Deploy workflow first (otherwise the next push re-creates the Lambda function), then run `.\infra\azure\teardown.ps1` and `.\infra\aws\teardown.ps1`. They list everything the setup scripts and deploys created, including all state snapshots, ask for confirmation, delete it, and are safe to re-run. Add `-DeleteOidcProvider` to the AWS script to also delete the account's GitHub OIDC provider; it is kept while any other IAM role still trusts it. To deploy again, repeat the steps above; only `AZURE_CLIENT_ID` and `DEPLOYED_APP_URL` change. If you created the Vercel project, delete it under its Settings → Advanced.
+Disable the Deploy workflow first (otherwise the next push re-creates the Lambda function), then run `.\infra\azure\teardown.ps1` and `.\infra\aws\teardown.ps1`. They list everything the setup scripts and deploys created, including all state snapshots, ask for confirmation, delete it, and are safe to re-run. Add `-DeleteOidcProvider` to the AWS script to also delete the account's GitHub OIDC provider; it is kept while any other IAM role still trusts it. On a disabled or expired Azure subscription, add `-SkipKeyVaultPurge` to the Azure script: Azure blocks the purge there, and the vault is deleted with the subscription. To deploy again, repeat the steps above and set `AZURE_ENABLED` to `true`. In the same subscription only `AZURE_CLIENT_ID` and `DEPLOYED_APP_URL` change; in a new one, so do the subscription ID and the resource names. If you created the Vercel project, delete it under its Settings → Advanced.
 
 ## Known limitations
 
