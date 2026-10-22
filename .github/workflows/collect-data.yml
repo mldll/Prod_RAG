@@ -38,8 +38,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Scheduled runs have no inputs, so they update both clouds
-        cloud: ${{ fromJSON(inputs.target_cloud == 'azure' && '["azure"]' || inputs.target_cloud == 'aws' && '["aws"]' || '["azure", "aws"]') }}
+        # Scheduled runs have no inputs and act like "both": AWS, plus Azure while the repository variable AZURE_ENABLED
+        # is "true" (the Azure deployment was retired in October 2026). Choosing "azure" always runs it
+        cloud: ${{ fromJSON(inputs.target_cloud == 'azure' && '["azure"]' || inputs.target_cloud == 'aws' && '["aws"]' || vars.AZURE_ENABLED == 'true' && '["azure", "aws"]' || '["aws"]') }}
     env:
       SECRET_BACKEND: env
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}

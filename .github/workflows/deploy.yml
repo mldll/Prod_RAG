@@ -20,15 +20,18 @@ permissions:
   contents: read
 
 jobs:
+  # Azure's image. A push or a "both" run includes Azure only while the repository variable AZURE_ENABLED is "true"
+  # (the Azure deployment was retired in October 2026); choosing "azure" always runs it. deploy-azure and its gate
+  # need this job, so they're skipped with it.
   build-and-push:
     name: Build & Push Image
+    if: ${{ github.event.inputs.target_cloud == 'azure' || (vars.AZURE_ENABLED == 'true' && (github.event_name == 'push' || github.event.inputs.target_cloud == 'both')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Log in to Azure (OIDC)
-        if: ${{ github.event_name == 'push' || github.event.inputs.target_cloud == 'azure' || github.event.inputs.target_cloud == 'both' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -36,11 +39,9 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Log in to Azure ACR
-        if: ${{ github.event_name == 'push' || github.event.inputs.target_cloud == 'azure' || github.event.inputs.target_cloud == 'both' }}
         run: az acr login --name ${{ vars.ACR_NAME }}
 
       - name: Build & Push Image to ACR
-        if: ${{ github.event_name == 'push' || github.event.inputs.target_cloud == 'azure' || github.event.inputs.target_cloud == 'both' }}
         run: |
           IMAGE_URI="${{ vars.ACR_NAME }}.azurecr.io/rag-api:${{ github.sha }}"
           IMAGE_LATEST="${{ vars.ACR_NAME }}.azurecr.io/rag-api:latest"
@@ -51,7 +52,6 @@ jobs:
   deploy-azure:
     name: Deploy to Azure Container Apps
     needs: build-and-push
-    if: ${{ github.event_name == 'push' || github.event.inputs.target_cloud == 'azure' || github.event.inputs.target_cloud == 'both' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -152,7 +152,7 @@ jobs:
 
   deploy-aws:
     name: Deploy to AWS Lambda Container
-    needs: build-and-push
+    # No needs: AWS builds its own image below, so an Azure failure never blocks it
     if: ${{ github.event_name == 'push' || github.event.inputs.target_cloud == 'aws' || github.event.inputs.target_cloud == 'both' }}
     runs-on: ubuntu-latest
     steps:
